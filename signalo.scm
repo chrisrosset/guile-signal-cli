@@ -25,7 +25,7 @@
                 #:headers '((Content-Type . "application/json")
                             (Accept       . "application/json"))
                 #:decode-body? #t)
-    (json-string->scm body)))
+    (u8json->scm body)))
 
 (define (signal-cli-post url payload)
   (receive (response body)
@@ -67,9 +67,13 @@ A group ID can be provided to restrict results to that group."
   "Receive new messages."
   (signal-cli-get (make-url server "v1" "receive" account)))
 
-(define* (messages/send server account message recipients)
+(define* (messages/send server account message recipients
+                        #:key (attachments '()))
   "Send a message."
+  (define recip-lst (if (list? recipients) recipients (list recipients)))
+
   (signal-cli-post (make-url server "v2" "send")
                    `( ("number" . ,account)
                       ("message" . ,message)
-                      ("recipients" . ,(list->vector recipients)))))
+                      ("base64_attachements" . ,(list->vector attachments))
+                      ("recipients" . ,(list->vector recip-lst)))))
